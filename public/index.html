@@ -167,6 +167,21 @@ html, body {
 }
 .map-iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: none; display: block; pointer-events: all; }
 .pins-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; }
+.map-recenter-group {
+  position: absolute; top: 14px; right: 14px; z-index: 1100;
+  display: flex; flex-direction: column; align-items: flex-end; gap: 8px;
+}
+.map-recenter-btn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 9px 14px 9px 11px; border-radius: 99px;
+  background: rgba(255,255,255,0.96); border: none;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.18);
+  font-family: inherit; font-size: 13px; font-weight: 600; color: #1a1a1a;
+  cursor: pointer; transition: background 0.15s, transform 0.15s;
+}
+.map-recenter-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+.map-recenter-btn:hover { background: #fff; }
+.map-recenter-btn:active { transform: scale(0.96); }
 .pin { position: absolute; transform: translate(-50%,-100%); pointer-events: all; cursor: pointer; }
 .pin-circle {
   width: 38px; height: 38px; border-radius: 50%;
@@ -480,6 +495,8 @@ html, body {
 .add-search-field::placeholder { color: #aaa; }
 
 .add-search-results { display: none; margin-top: 10px; border-top: 0.5px solid #efefef; padding-top: 8px; }
+.add-location-results { display: block; }
+.add-location-results:empty { display: none; }
 .add-search-result {
   display: flex; align-items: center; gap: 10px;
   padding: 10px 4px; cursor: pointer; border-radius: 8px;
@@ -571,6 +588,16 @@ html, body {
 }
 .add-cat-btn.active { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
 .add-cat-btn:hover:not(.active) { background: #f5f5f5; }
+.add-cat-btn-new { border-style: dashed; color: #888; }
+.add-cat-btn-new:hover { background: #f5f5f5; color: #555; }
+.add-cat-btn-confirm {
+  padding: 8px 18px; border-radius: 99px;
+  font-size: 14px; font-weight: 600;
+  cursor: pointer; border: none;
+  background: #1a1a1a; color: #fff;
+  font-family: inherit;
+}
+.add-cat-btn-confirm:hover { background: #333; }
 
 .add-pin-btn {
   width: 100%; padding: 16px;
@@ -583,6 +610,17 @@ html, body {
 }
 .add-pin-btn:hover { background: #333; }
 .add-pin-btn:active { transform: scale(0.98); }
+.add-delete-btn {
+  width: 100%; padding: 14px;
+  background: #fff0f0; color: #c0392b;
+  border: none; border-radius: 16px;
+  font-size: 15px; font-weight: 600;
+  cursor: pointer; font-family: inherit;
+  transition: background 0.15s, transform 0.1s;
+  margin-top: 10px;
+}
+.add-delete-btn:hover { background: #fde2e2; }
+.add-delete-btn:active { transform: scale(0.98); }
 
 .add-toast {
   position: absolute; bottom: 110px; left: 50%; transform: translateX(-50%);
@@ -1136,7 +1174,8 @@ html, body {
 }
 .profile-logo-mark {
   width: 72px; height: 72px; border-radius: 22px;
-  background: #1a1a1a;
+  background: #fff;
+  border: 1px solid #eee;
   display: flex; align-items: center; justify-content: center;
   margin-bottom: 20px;
 }
@@ -1219,13 +1258,6 @@ html, body {
 .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .profile-name { font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 3px; letter-spacing: -0.3px; }
 .profile-email-text { font-size: 13px; color: rgba(255,255,255,0.6); margin-bottom: 18px; }
-.profile-edit-btn {
-  padding: 8px 20px; background: rgba(255,255,255,0.12);
-  border: 1px solid rgba(255,255,255,0.25); border-radius: 99px;
-  font-size: 13px; font-weight: 500; color: #fff;
-  cursor: pointer; font-family: inherit; transition: background 0.15s;
-}
-.profile-edit-btn:hover { background: rgba(255,255,255,0.2); }
 
 .profile-stats-row {
   display: flex; background: #fff;
@@ -1541,8 +1573,57 @@ html, body {
 .custom-marker-circle:not(.user-added):not(.active) {
   background: #6b6b6b;
 }
+
+/* ── RESPONSIVE SCALING ──────────────────────────────────────────────────
+   The app is built mobile-first with fluid (%/flex/fr) units throughout,
+   so it already adapts reasonably well. These rules tune the edges:
+   small phones get tighter spacing so nothing feels cramped or clipped,
+   and on tablets/desktop browsers the content is capped to a comfortable
+   phone-sized column instead of stretching edge-to-edge. */
+
+/* Center and cap width on larger viewports (tablets, desktop browsers) */
+@media (min-width: 560px) {
+  html, body { background: #ddd; }
+  .phone {
+    max-width: 480px;
+    margin: 0 auto;
+    height: 100dvh;
+    box-shadow: 0 0 40px rgba(0,0,0,0.18);
+  }
+}
+
+/* Small phones (iPhone SE / mini and similar ~360-380px wide) */
+@media (max-width: 380px) {
+  .tab-item span { font-size: 9px; }
+  .tab-item svg { width: 21px; height: 21px; }
+  .fl-section-title { font-size: 15px; }
+  .delete-dialog { width: calc(100vw - 48px); max-width: 300px; }
+  .profile-logo-mark { width: 64px; height: 64px; }
+  .profile-logo-mark img { width: 48px; height: 48px; }
+}
+
+/* Very narrow screens (folded phones, ~320px) */
+@media (max-width: 340px) {
+  .tab-bar { padding: 4px 0 calc(6px + env(safe-area-inset-bottom, 0px)); }
+  .tab-item span { font-size: 8.5px; }
+  .tab-item svg { width: 20px; height: 20px; }
+}
+
+/* Larger phones / phablets — slightly roomier spacing */
+@media (min-width: 430px) and (max-width: 559px) {
+  .fl-section-title { font-size: 17px; }
+}
+
+/* Any modal/dialog with a fixed px width should never exceed the viewport */
+.login-sheet, .delete-dialog, .save-banner, .settings-card {
+  max-width: calc(100vw - 32px);
+}
+
+/* Respect safe-area insets on notched devices for fixed top/bottom UI */
+.tab-bar { padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px)); }
 </style>
 </head>
+
 <body>
 <div class="phone" id="phone">
 
@@ -1560,14 +1641,19 @@ html, body {
       <div class="map-header-avatar" id="mapHeaderAvatar" onclick="switchTab('profile',null)">R</div>
     </div>
   </div>
-  <div class="filter-bar">
+  <div class="filter-bar" id="mapFilterBar">
     <button class="filter-btn active" onclick="setMapFilter(this)">All</button>
-    <button class="filter-btn" onclick="setMapFilter(this)">Murals</button>
     <button class="filter-btn" onclick="setMapFilter(this)">Sculpture</button>
-    <button class="filter-btn" onclick="setMapFilter(this)">Mosaic</button>
+    <button class="filter-btn" onclick="setMapFilter(this)">Mural</button>
   </div>
   <div class="map-wrap" id="mapWrap">
     <div id="map" class="map-iframe" style="position:absolute;inset:0;width:100%;height:100%;"></div>
+    <div class="map-recenter-group" id="mapRecenterGroup">
+      <button class="map-recenter-btn" onclick="recenterMapOnHongKong()" aria-label="Recenter on Hong Kong">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+        <span>Hong Kong</span>
+      </button>
+    </div>
     <div class="toast" id="toastEl"></div>
   </div>
   <div class="bottom-sheet">
@@ -1654,9 +1740,7 @@ html, body {
 
   <div class="browse-filter-bar" id="browseFilterBar">
     <button class="filter-btn active" onclick="setBrowseFilter(this,'All')">All</button>
-    <button class="filter-btn" onclick="setBrowseFilter(this,'Murals')">Murals</button>
     <button class="filter-btn" onclick="setBrowseFilter(this,'Sculpture')">Sculpture</button>
-    <button class="filter-btn" onclick="setBrowseFilter(this,'Mosaic')">Mosaic</button>
   </div>
 
   <div class="browse-scroll" id="browseScroll">
@@ -1756,7 +1840,11 @@ html, body {
         <div class="detail-divider" style="margin-top:24px;"></div>
         <div class="detail-section-title">Photos</div>
         <div class="add-photo-row" id="detailPhotosWrap" style="margin-top:12px;"></div>
-        
+
+        <div class="detail-divider" style="margin-top:24px;" id="detailNotesDivider"></div>
+        <div class="detail-section-title" id="detailNotesTitle" style="display:none;">Community Notes</div>
+        <div id="detailNotesList" style="margin-top:12px;"></div>
+
         <div class="detail-stats">
           <div class="stat-col"><div class="stat-num" id="dVisitors">143</div><div class="stat-label">Visitors</div></div>
           <div class="stat-col"><div class="stat-num" id="dSaved">38</div><div class="stat-label">Saved</div></div>
@@ -1837,16 +1925,16 @@ html, body {
 <!-- ══════ ADD SCREEN ══════ -->
 <div class="screen hidden" id="addScreen">
   <div class="add-header">
-    <button class="add-back-btn" onclick="switchTab('map',null)" aria-label="Back">
+    <button class="add-back-btn" onclick="exitAddOrEditScreen()" aria-label="Back">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
     </button>
-    <h1>Add Installation</h1>
+    <h1 id="addScreenTitle">Add Installation</h1>
   </div>
 
   <div class="add-scroll">
 
     <!-- Search existing -->
-    <div class="add-search-wrap">
+    <div class="add-search-wrap" id="addSearchWrap">
       <div class="add-search-label">Search existing artworks</div>
       <div class="add-search-inner">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -1862,7 +1950,7 @@ html, body {
     <!-- Add form (shown when no match) -->
     <div class="add-form-section" id="addFormSection">
 
-      <div class="add-section-divider"><span>New Artwork Details</span></div>
+      <div class="add-section-divider"><span id="addSectionDividerText">New Artwork Details</span></div>
 
       <!-- Photo -->
       <div class="add-card">
@@ -1891,11 +1979,15 @@ html, body {
       <!-- Category -->
       <div class="add-card">
         <label class="add-field-label">Category</label>
-        <div class="add-cat-row">
-          <button class="add-cat-btn active" data-cat="Mural"        onclick="setAddCategory(this,'Mural')">Mural</button>
-          <button class="add-cat-btn"        data-cat="Sculpture"    onclick="setAddCategory(this,'Sculpture')">Sculpture</button>
-          <button class="add-cat-btn"        data-cat="Mosaic"       onclick="setAddCategory(this,'Mosaic')">Mosaic</button>
-          <button class="add-cat-btn"        data-cat="Installation" onclick="setAddCategory(this,'Installation')">Installation</button>
+        <div class="add-cat-row" id="addCatRow">
+          <button class="add-cat-btn active" data-cat="Uncategorized" onclick="setAddCategory(this,'Uncategorized')">Uncategorized</button>
+          <button class="add-cat-btn"        data-cat="Mural"     onclick="setAddCategory(this,'Mural')">Mural</button>
+          <button class="add-cat-btn"        data-cat="Sculpture" onclick="setAddCategory(this,'Sculpture')">Sculpture</button>
+          <button class="add-cat-btn add-cat-btn-new" id="addCatNewBtn" onclick="showAddCategoryInput()">+ Add category</button>
+        </div>
+        <div id="addCatNewWrap" style="display:none;margin-top:10px;display:flex;gap:8px;">
+          <input class="add-input" id="addCatNewInput" type="text" placeholder="e.g. Mosaic, Installation, Graffiti…" style="flex:1;" onkeydown="if(event.key==='Enter'){event.preventDefault();confirmNewCategory();}">
+          <button class="add-cat-btn-confirm" onclick="confirmNewCategory()" style="flex-shrink:0;">Add</button>
         </div>
       </div>
 
@@ -1904,26 +1996,26 @@ html, body {
         <label class="add-field-label" for="addLocation">Location</label>
         <div class="add-location-wrap">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-          <input class="add-input add-location-input" id="addLocation" type="text" placeholder="e.g. Sheung Wan, Hong Kong">
+          <input class="add-input add-location-input" id="addLocation" type="text" placeholder="e.g. Sheung Wan, Hong Kong" oninput="onLocationSearch(this.value)" onfocus="showSavedLocationSuggestions(this.value)" autocomplete="off">
         </div>
-      </div>
-
-      <!-- Coordinates -->
-      <div class="add-card">
-        <label class="add-field-label">Coordinates (Map Location)</label>
-        <div style="display:flex;gap:12px;">
-          <div style="flex:1;">
-            <label class="add-field-label" style="font-size:12px;color:#888;margin-bottom:6px;display:block;">Latitude</label>
-            <input class="add-input" id="addLat" type="number" step="any" placeholder="e.g. 22.2815">
-          </div>
-          <div style="flex:1;">
-            <label class="add-field-label" style="font-size:12px;color:#888;margin-bottom:6px;display:block;">Longitude</label>
-            <input class="add-input" id="addLng" type="number" step="any" placeholder="e.g. 114.1576">
+        <div class="add-location-results" id="addLocationResults" style="margin-top:8px;"></div>
+        <div id="addLocationConfirmed" style="display:none;margin-top:8px;padding:10px 12px;background:#f0f8f0;border-radius:10px;font-size:13px;color:#2a7a2a;">
+          📍 <span id="addLocationConfirmedText"></span>
+          <label style="display:flex;align-items:flex-start;gap:8px;margin-top:8px;font-size:12px;color:#555;cursor:pointer;">
+            <input type="checkbox" id="saveAsCorrectionCheckbox" style="margin-top:2px;" onchange="toggleCorrectionNameField(this)">
+            <span>Save this address as the correct location for a place name — future searches for that name will offer it directly</span>
+          </label>
+          <div id="correctionNameFieldWrap" style="display:none;margin-top:8px;">
+            <label class="add-field-label" style="font-size:11px;color:#888;" for="correctionNameInput">Name people will search for</label>
+            <input class="add-input" id="correctionNameInput" type="text" placeholder="e.g. NYU Shanghai" autocomplete="off" style="margin-top:4px;font-size:13px;padding:8px 10px;">
           </div>
         </div>
+        <input type="hidden" id="addLat">
+        <input type="hidden" id="addLng">
       </div>
 
-      <button class="add-pin-btn" onclick="submitInstallation()">Pin Installation</button>
+      <button class="add-pin-btn" id="addPinBtn" onclick="submitInstallation()">Pin Installation</button>
+      <button class="add-delete-btn" id="addDeleteBtn" onclick="openDeleteConfirmFromEdit()" style="display:none;">Delete Installation</button>
 
     </div>
   </div>
@@ -2067,7 +2159,7 @@ html, body {
     <!-- LOGGED OUT -->
     <div class="profile-loggedout" id="profileLoggedOut">
       <div class="profile-logo-mark">
-        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10c.55 0 1-.45 1-1 0-.27-.1-.51-.26-.7-.16-.19-.25-.43-.25-.68 0-.55.45-1 1-1h1.18c3.22 0 5.83-2.61 5.83-5.83C20.5 5.91 16.64 2 12 2zm-5.5 9c-.83 0-1.5-.67-1.5-1.5S5.67 8 6.5 8 8 8.67 8 9.5 7.33 11 6.5 11zm3-4C8.67 7 8 6.33 8 5.5S8.67 4 9.5 4 11 4.67 11 5.5 10.33 7 9.5 7zm5 0C13.67 7 13 6.33 13 5.5S13.67 4 14.5 4 16 4.67 16 5.5 15.33 7 14.5 7zm3 4c-.83 0-1.5-.67-1.5-1.5S16.67 8 17.5 8 19 8.67 19 9.5 18.33 11 17.5 11z" fill="#fff"/></svg>
+        <img src="data:image/png;base64,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" alt="ArtWalk" style="width:56px;height:56px;object-fit:contain;">
       </div>
       <div class="profile-lo-title">Welcome to ArtWalk</div>
       <div class="profile-lo-sub">Sign in to save artworks, log your feelings, and track your art journey across Hong Kong.</div>
@@ -2159,7 +2251,6 @@ html, body {
         <div class="profile-avatar" id="profileAvatar">R</div>
         <div class="profile-name" id="profileName">Reese Chang</div>
         <div class="profile-email-text" id="profileEmailText">reesechangg@artwalk.hk</div>
-        <button class="profile-edit-btn" onclick="showToast('Edit profile — coming soon')">Edit Profile</button>
       </div>
 
       <div class="profile-stats-row" id="profileStatsRow">
@@ -2672,6 +2763,18 @@ const api = {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return res.json();
   },
+  patch: async (path, data) => {
+    const res = await fetch(path, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {})
+      },
+      body: JSON.stringify(data)
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
+  },
   delete: async (path) => {
     const res = await fetch(path, {
       method: 'DELETE',
@@ -2685,8 +2788,11 @@ const api = {
 async function loadArtworks() {
   try {
     artworks = await api.get('/api/artworks');
-    // Ensure tags are arrays
-    artworks = artworks.map(a => ({ ...a, tags: a.tags ? (Array.isArray(a.tags) ? a.tags : a.tags.split(',')) : [], feelings: [] }));
+    // Ensure tags are arrays; preserve feelings returned by the server
+    artworks = artworks.map(a => ({ ...a, tags: a.tags ? (Array.isArray(a.tags) ? a.tags : a.tags.split(',')) : [], feelings: a.feelings || [] }));
+    rebuildCategoryFilterBars();
+    rebuildCityRecenterButtons();
+    buildLocationSuggestionsFromArtworks();
     if (map) buildPins();
     if (document.getElementById('browseGrid')) renderBrowseGrid(getFilteredArtworks());
   } catch (err) {
@@ -2772,12 +2878,31 @@ async function unsaveArtwork(artworkId) {
 
 async function submitFeelingToApi(artworkId, feeling, note, isPublic, extraEmojis) {
   try {
-    await api.post(`/api/artworks/${artworkId}/feelings`, {
+    const created = await api.post(`/api/artworks/${artworkId}/feelings`, {
       feeling,
       note,
       is_public: isPublic,
       extra_emojis: extraEmojis
     });
+    // Reflect the new note immediately in local state so it shows on the
+    // artwork's description without needing a full reload. Only do this
+    // for public notes (or the author's own), matching what the server
+    // would return on next fetch.
+    const a = artworks.find(art => art.id === artworkId);
+    if (a) {
+      if (!a.feelings) a.feelings = [];
+      a.feelings.push({
+        id: created.id,
+        artwork_id: artworkId,
+        feeling,
+        note,
+        is_public: isPublic ? 1 : 0,
+        extra_emojis: extraEmojis ? extraEmojis.join(',') : '',
+        user_name: profileUser ? profileUser.name : 'You',
+        user_id: profileUser ? profileUser.id : null,
+        created_at: new Date().toISOString()
+      });
+    }
     showToast('Feeling logged!');
   } catch (err) {
     console.error(err);
@@ -2787,7 +2912,89 @@ async function submitFeelingToApi(artworkId, feeling, note, isPublic, extraEmoji
 
 let activeIdx=0, remembered=true, pwdVisible=false, currentScreen='map', browseFilter='All', detailFromBrowse=false;
 let map, markers=[], mapFilter='All'; // Leaflet map, markers array, map filter
-let addPhotos=[], addCategory='Mural';
+let addPhotos=[], addCategory='Uncategorized';
+let editingArtworkId=null; // null = creating a new artwork; set = editing an existing user-added one
+let selectedLocationLat=null, selectedLocationLng=null, locationSearchDebounce=null, lastLocationSearchTerm='';
+let _savedLocationCorrections = []; // derived from currently pinned artworks (not the DB corrections table)
+
+function buildLocationSuggestionsFromArtworks(){
+  // Build a deduplicated list of locations from all currently pinned artworks.
+  // Keyed by location string so each unique place appears once.
+  const seen = new Set();
+  const suggestions = [];
+  for(const a of (artworks||[])){
+    const loc = (a.location||'').trim();
+    if(!loc || !a.lat || !a.lng) continue;
+    if(seen.has(loc)) continue;
+    seen.add(loc);
+    suggestions.push({ search_term: loc, display_name: loc, lat: a.lat, lng: a.lng });
+  }
+  _savedLocationCorrections = suggestions;
+}
+
+async function loadSavedLocationCorrections(){
+  // Re-derive from the live artworks array and also fetch DB corrections for merging
+  buildLocationSuggestionsFromArtworks();
+  // Also fetch DB-saved corrections and merge them in (dedup by location string)
+  try {
+    const dbCorrections = await api.get('/api/location-corrections');
+    const existing = new Set(_savedLocationCorrections.map(s=>s.search_term));
+    for(const c of dbCorrections){
+      // Only include if it matches an artwork location still in the artworks array
+      // (i.e. the place is still pinned somewhere)
+      const stillPinned = (artworks||[]).some(a=>{
+        const loc=(a.location||'').trim();
+        return loc && (
+          loc.toLowerCase()===c.display_name.toLowerCase() ||
+          loc.toLowerCase()===c.search_term.toLowerCase()
+        );
+      });
+      if(stillPinned && !existing.has(c.search_term)){
+        existing.add(c.search_term);
+        _savedLocationCorrections.push({ search_term: c.search_term, display_name: c.display_name, lat: c.lat, lng: c.lng });
+      }
+    }
+  } catch(e) {
+    // DB corrections optional; artwork-derived ones are enough
+  }
+}
+
+
+/* ── Dynamic category filter bars ──
+   Both the Map and Browse filter bars are generated from whatever
+   categories actually exist in the artworks data, so a brand-new custom
+   category (added via the "+ Add category" option when pinning an
+   installation) shows up as a filter option immediately, without needing
+   a code change. */
+function getDistinctCategories(){
+  const seen = new Set();
+  const cats = [];
+  artworks.forEach(a=>{
+    const cat = a.browseCategory || a.type;
+    if(cat && !seen.has(cat)){ seen.add(cat); cats.push(cat); }
+  });
+  return cats.sort((x,y)=>x.localeCompare(y));
+}
+
+function rebuildCategoryFilterBars(){
+  const categories = getDistinctCategories();
+
+  const mapBar = document.getElementById('mapFilterBar');
+  if(mapBar){
+    const isMapFilterStillValid = mapFilter==='All' || categories.includes(mapFilter);
+    if(!isMapFilterStillValid) mapFilter='All';
+    mapBar.innerHTML = `<button class="filter-btn${mapFilter==='All'?' active':''}" onclick="setMapFilter(this)">All</button>` +
+      categories.map(cat=>`<button class="filter-btn${mapFilter===cat?' active':''}" onclick="setMapFilter(this)">${cat}</button>`).join('');
+  }
+
+  const browseBar = document.getElementById('browseFilterBar');
+  if(browseBar){
+    const isBrowseFilterStillValid = browseFilter==='All' || categories.includes(browseFilter);
+    if(!isBrowseFilterStillValid) browseFilter='All';
+    browseBar.innerHTML = `<button class="filter-btn${browseFilter==='All'?' active':''}" onclick="setBrowseFilter(this,'All')">All</button>` +
+      categories.map(cat=>`<button class="filter-btn${browseFilter===cat?' active':''}" onclick="setBrowseFilter(this,'${cat.replace(/'/g,"\\'")}')">${cat}</button>`).join('');
+  }
+}
 
 /* PINS */
 function buildPins(){
@@ -2799,10 +3006,7 @@ function buildPins(){
     if(a.lat===undefined) return;
     
     // Apply map filter
-    const matchesFilter = mapFilter === 'All' || 
-                          (mapFilter === 'Murals' && a.browseCategory === 'Murals') || 
-                          (mapFilter === 'Sculpture' && a.browseCategory === 'Sculpture') || 
-                          (mapFilter === 'Mosaic' && a.browseCategory === 'Mosaic');
+    const matchesFilter = mapFilter === 'All' || a.browseCategory === mapFilter;
     if (!matchesFilter) return;
     
     // Create custom marker icon
@@ -2879,6 +3083,7 @@ function openDetail(idx, fromBrowse){
   document.getElementById('dInspired').textContent=a.inspired;
   document.getElementById('detailTagsList').innerHTML=a.tags.map(t=>`<span class="detail-tag">${t}</span>`).join('');
   renderDetailPhotos(a);
+  renderDetailNotes(a);
 
   const hero=document.getElementById('detailHero');
   const backBtn=`<button class="detail-back-btn" onclick="closeDetail()" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="#222" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>`;
@@ -2900,14 +3105,15 @@ function openDetail(idx, fromBrowse){
   document.querySelector('.detail-scroll').scrollTop=0;
   // mark as visited
   if(!a.visitedByUser) a.visitedByUser = true;
-  // show delete button only for user-added artworks
-  document.getElementById('deleteArtworkBtn').style.display = a.userAdded ? 'flex' : 'none';
+  // show delete button only for artworks created by the current user
+  const isOwner = a.userAdded && profileUser && Number(a.created_by) === Number(profileUser.id);
+  document.getElementById('deleteArtworkBtn').style.display = isOwner ? 'flex' : 'none';
   const ds=document.getElementById('detailScreen');
   ds.classList.remove('hidden','slide-left'); ds.style.zIndex=20;
   // update save icon if already saved
   setTimeout(()=>{
     const icon=document.getElementById('detailSaveIcon');
-    if(icon) icon.setAttribute('fill', a.savedByUser?'#222':'none');
+    if(icon) icon.setAttribute('fill', savedArtworkIds.has(a.id)?'#222':'none');
   },50);
   // sync map bookmark button too
   syncBookmarkBtn(a);
@@ -2957,7 +3163,11 @@ function renderFeelingPhotos(){
 function handleFeelingPhotoAdd(e){
   Array.from(e.target.files).forEach(f=>{
     const reader=new FileReader();
-    reader.onload=ev=>{feelingPhotos.push(ev.target.result); renderFeelingPhotos();};
+    reader.onload=async ev=>{
+      const compressed = await compressImageDataUrl(ev.target.result);
+      feelingPhotos.push(compressed);
+      renderFeelingPhotos();
+    };
     reader.readAsDataURL(f);
   });
 }
@@ -3203,6 +3413,40 @@ function feelingEmoji(f){
   return{Inspired:'✨',Moved:'🥹',Curious:'🤔',Calm:'😌',Joyful:'😊',Amazed:'🤩',Unsettled:'😰',Reflective:'🌀'}[f]||'💭';
 }
 
+function renderDetailNotes(a){
+  const title = document.getElementById('detailNotesTitle');
+  const list = document.getElementById('detailNotesList');
+  if(!title || !list) return;
+
+  const publicNotes = (a.feelings || []).filter(f => f.is_public === 1 || f.is_public === true);
+
+  if(publicNotes.length === 0){
+    title.style.display = 'none';
+    list.innerHTML = '';
+    return;
+  }
+
+  title.style.display = 'block';
+  title.textContent = `Community Notes (${publicNotes.length})`;
+
+  list.innerHTML = publicNotes.slice().reverse().map(f => {
+    const name = f.user_name || 'Anonymous';
+    const noteText = f.note ? f.note : '';
+    const extras = f.extra_emojis ? f.extra_emojis.split(',').filter(Boolean).join(' ') : '';
+    const when = f.created_at ? new Date(f.created_at).toLocaleDateString(undefined,{month:'short',day:'numeric'}) : '';
+    return `
+    <div class="fl-past-item" style="margin-bottom:8px;">
+      <div class="fl-past-emoji">${feelingEmoji(f.feeling)}</div>
+      <div class="fl-past-info">
+        <div class="fl-past-label">${name}<span class="fl-past-badge public">Public</span></div>
+        ${extras?`<div class="fl-past-extras">${extras}</div>`:''}
+        ${noteText?`<div class="fl-past-note">"${noteText}"</div>`:''}
+        <div class="fl-past-time">${when}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
 function deleteFeeling(artworkIdx, feelingIdx){
   const a=artworks[artworkIdx];
   // reverse index back to original (we display reversed)
@@ -3439,13 +3683,26 @@ function switchTab(tab,clickedBtn){
 
 /* ADD SCREEN */
 function resetAddForm(){
-  addPhotos=[]; addCategory='Mural';
+  addPhotos=[]; addCategory='Uncategorized'; selectedLocationLat=null; selectedLocationLng=null; editingArtworkId=null;
   ['addTitle','addArtist','addDesc','addLocation','addLat','addLng','addSearchInput'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
   const sr=document.getElementById('addSearchResults'); if(sr){sr.innerHTML='';sr.style.display='none';}
   document.getElementById('addNoMatch').style.display='none';
   document.getElementById('addFormSection').style.display='none';
+  const lr=document.getElementById('addLocationResults'); if(lr) lr.innerHTML='';
+  const lc=document.getElementById('addLocationConfirmed'); if(lc) lc.style.display='none';
+  const catNewWrap=document.getElementById('addCatNewWrap'); if(catNewWrap) catNewWrap.style.display='none';
+  const catNewInput=document.getElementById('addCatNewInput'); if(catNewInput) catNewInput.value='';
+  // remove any previously-added custom category buttons, keep only the originals + the "+ Add category" button
+  document.querySelectorAll('.add-cat-btn.custom').forEach(b=>b.remove());
   renderAddPhotos();
-  document.querySelectorAll('.add-cat-btn').forEach(b=>b.classList.toggle('active',b.dataset.cat==='Mural'));
+  document.querySelectorAll('.add-cat-btn').forEach(b=>b.classList.toggle('active',b.dataset.cat==='Uncategorized'));
+
+  // restore "Add" mode UI (in case we're coming out of edit mode)
+  document.getElementById('addScreenTitle').textContent='Add Installation';
+  document.getElementById('addSectionDividerText').textContent='New Artwork Details';
+  document.getElementById('addPinBtn').textContent='Pin Installation';
+  const searchWrap=document.getElementById('addSearchWrap'); if(searchWrap) searchWrap.style.display='block';
+  const deleteBtn=document.getElementById('addDeleteBtn'); if(deleteBtn) deleteBtn.style.display='none';
 }
 
 function onAddSearch(val){
@@ -3486,10 +3743,34 @@ function renderAddPhotos(){
   wrap.innerHTML=html;
 }
 
+function compressImageDataUrl(dataUrl, maxDim=1280, quality=0.8){
+  return new Promise((resolve)=>{
+    const img=new Image();
+    img.onload=()=>{
+      let {width,height}=img;
+      if(width>maxDim || height>maxDim){
+        if(width>height){ height=Math.round(height*(maxDim/width)); width=maxDim; }
+        else { width=Math.round(width*(maxDim/height)); height=maxDim; }
+      }
+      const canvas=document.createElement('canvas');
+      canvas.width=width; canvas.height=height;
+      const ctx=canvas.getContext('2d');
+      ctx.drawImage(img,0,0,width,height);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.onerror=()=>resolve(dataUrl); // fall back to original if decoding fails
+    img.src=dataUrl;
+  });
+}
+
 function handlePhotoAdd(e){
   Array.from(e.target.files).forEach(f=>{
     const reader=new FileReader();
-    reader.onload=ev=>{addPhotos.push(ev.target.result);renderAddPhotos();};
+    reader.onload=async ev=>{
+      const compressed = await compressImageDataUrl(ev.target.result);
+      addPhotos.push(compressed);
+      renderAddPhotos();
+    };
     reader.readAsDataURL(f);
   });
 }
@@ -3501,51 +3782,412 @@ function setAddCategory(btn,cat){
   document.querySelectorAll('.add-cat-btn').forEach(b=>b.classList.toggle('active',b.dataset.cat===cat));
 }
 
-function submitInstallation(){
+/* ── Location geocoding (OpenStreetMap Nominatim) ── */
+function showSavedLocationSuggestions(val){
+  const q = (val||'').trim().toLowerCase();
+  const results = document.getElementById('addLocationResults');
+  if(!results) return;
+
+  // Filter saved corrections that match the current input (or show all if empty)
+  const matches = _savedLocationCorrections.filter(c=>{
+    if(!q) return true;
+    return c.search_term.toLowerCase().includes(q) || c.display_name.toLowerCase().includes(q);
+  });
+
+  if(matches.length===0) return; // nothing to show; let the normal search take over
+
+  const html = `
+    <div style="font-size:11px;color:#aaa;margin:4px 0 6px 2px;letter-spacing:0.02em;">SAVED LOCATIONS</div>
+    ${matches.map((c,i)=>`
+      <div class="add-location-result" onclick="selectSavedLocation(${i})"
+        style="padding:11px 12px;border-radius:10px;background:#eaf6f0;border:1.5px solid #2a9d6a;margin-bottom:6px;cursor:pointer;font-size:13px;color:#1a3a2a;display:flex;align-items:center;gap:8px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#2a9d6a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0;"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        <div>
+          <div style="font-weight:700;font-size:12px;color:#1a7a5a;">${escapeHtml(c.search_term)}</div>
+          <div style="font-size:12px;color:#555;margin-top:1px;">${escapeHtml(c.display_name)}</div>
+        </div>
+      </div>`).join('')}`;
+
+  results.innerHTML = html;
+  window._savedLocationMatchList = matches;
+}
+
+function escapeHtml(str){
+  return (str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function selectSavedLocation(i){
+  const c = (window._savedLocationMatchList||[])[i];
+  if(!c) return;
+  selectedLocationLat = parseFloat(c.lat);
+  selectedLocationLng = parseFloat(c.lng);
+  document.getElementById('addLat').value = selectedLocationLat;
+  document.getElementById('addLng').value = selectedLocationLng;
+  document.getElementById('addLocation').value = c.search_term;
+  document.getElementById('addLocationResults').innerHTML = '';
+
+  const confirmedBox = document.getElementById('addLocationConfirmed');
+  const confirmedText = document.getElementById('addLocationConfirmedText');
+  if(confirmedBox && confirmedText){
+    confirmedText.textContent = `Pin will be placed at ${selectedLocationLat.toFixed(5)}, ${selectedLocationLng.toFixed(5)}`;
+    confirmedBox.style.display = 'block';
+  }
+  const correctionCheckbox = document.getElementById('saveAsCorrectionCheckbox');
+  if(correctionCheckbox){
+    correctionCheckbox.parentElement.style.display = 'none'; // already saved
+    correctionCheckbox.checked = false;
+  }
+  const correctionNameWrap = document.getElementById('correctionNameFieldWrap');
+  if(correctionNameWrap) correctionNameWrap.style.display = 'none';
+}
+
+function onLocationSearch(val){
+  selectedLocationLat=null; selectedLocationLng=null;
+  const confirmedBox=document.getElementById('addLocationConfirmed');
+  if(confirmedBox) confirmedBox.style.display='none';
+  document.getElementById('addLat').value='';
+  document.getElementById('addLng').value='';
+
+  clearTimeout(locationSearchDebounce);
+  const q=val.trim();
+  lastLocationSearchTerm=q;
+  const results=document.getElementById('addLocationResults');
+  if(q.length<3){
+    // Show saved locations filtered by what's typed so far
+    showSavedLocationSuggestions(q);
+    return;
+  }
+
+  locationSearchDebounce=setTimeout(()=>geocodeLocation(q), 450);
+}
+
+let _geocodeRequestSeq = 0;
+
+async function geocodeLocation(query){
+  const results=document.getElementById('addLocationResults');
+  results.innerHTML=`<div style="padding:10px 4px;font-size:13px;color:#999;">Searching…</div>`;
+  const thisRequest = ++_geocodeRequestSeq;
+  try {
+    const data = await api.get(`/api/geocode?q=${encodeURIComponent(query)}`);
+
+    // Ignore this response if a newer search has been kicked off since
+    if (thisRequest !== _geocodeRequestSeq) return;
+
+    if(!data || data.length===0){
+      results.innerHTML=`<div style="padding:10px 4px;font-size:13px;color:#999;">No matching places found. Try a more specific search.</div>`;
+      return;
+    }
+
+    const correctionPlaces = data.filter(p=>p.is_correction);
+    const otherPlaces = data.filter(p=>!p.is_correction);
+
+    let html = '';
+    if(correctionPlaces.length>0){
+      html += correctionPlaces.map((place)=>{
+        const i = data.indexOf(place);
+        return `
+      <div class="add-location-result" onclick="selectGeocodedLocation(${i})" style="padding:11px 12px;border-radius:10px;background:#eaf6f0;border:1.5px solid #2a9d6a;margin-bottom:4px;cursor:pointer;font-size:13px;color:#1a3a2a;">
+        <div style="font-weight:700;color:#1a7a5a;font-size:11px;letter-spacing:0.02em;margin-bottom:2px;">✓ VERIFIED LOCATION</div>
+        ${place.display_name}
+      </div>`;
+      }).join('');
+      if(otherPlaces.length>0){
+        html += `<div style="font-size:11px;color:#aaa;margin:8px 0 6px 2px;">Other matches</div>`;
+      }
+    }
+    html += otherPlaces.map((place)=>{
+      const i = data.indexOf(place);
+      return `
+      <div class="add-location-result" onclick="selectGeocodedLocation(${i})" style="padding:10px 12px;border-radius:10px;background:#f7f7f5;margin-bottom:6px;cursor:pointer;font-size:13px;color:#333;">
+        ${place.display_name}
+      </div>`;
+    }).join('');
+
+    results.innerHTML = html;
+
+    window._geocodeResults = data;
+  } catch (err) {
+    if (thisRequest !== _geocodeRequestSeq) return;
+    console.error('Geocoding error:', err);
+    results.innerHTML=`<div style="padding:10px 4px;font-size:13px;color:#c33;">Search failed. Check your connection and try again.</div>`;
+  }
+}
+
+function toggleCorrectionNameField(checkbox){
+  const wrap=document.getElementById('correctionNameFieldWrap');
+  if(wrap) wrap.style.display = checkbox.checked ? 'block' : 'none';
+}
+
+function selectGeocodedLocation(i){
+  const place = window._geocodeResults[i];
+  if(!place) return;
+  selectedLocationLat = parseFloat(place.lat);
+  selectedLocationLng = parseFloat(place.lon);
+  document.getElementById('addLat').value = selectedLocationLat;
+  document.getElementById('addLng').value = selectedLocationLng;
+  document.getElementById('addLocation').value = place.display_name;
+  document.getElementById('addLocationResults').innerHTML='';
+
+  const confirmedBox=document.getElementById('addLocationConfirmed');
+  const confirmedText=document.getElementById('addLocationConfirmedText');
+  const correctionCheckbox=document.getElementById('saveAsCorrectionCheckbox');
+  const correctionNameWrap=document.getElementById('correctionNameFieldWrap');
+  const correctionNameInput=document.getElementById('correctionNameInput');
+  if(confirmedBox && confirmedText){
+    confirmedText.textContent = `Pin will be placed at ${selectedLocationLat.toFixed(5)}, ${selectedLocationLng.toFixed(5)}`;
+    confirmedBox.style.display='block';
+  }
+  if(correctionCheckbox){
+    // already a verified correction — no need to offer saving it again
+    correctionCheckbox.parentElement.style.display = place.is_correction ? 'none' : 'flex';
+    correctionCheckbox.checked = false;
+  }
+  if(correctionNameWrap) correctionNameWrap.style.display='none';
+  if(correctionNameInput){
+    // default to the artwork's title (e.g. "NYU Shanghai"), since that's
+    // the human-friendly name people will actually search for — falls back
+    // to whatever the user typed in the location search box itself
+    const titleField = document.getElementById('addTitle');
+    correctionNameInput.value = (titleField && titleField.value.trim()) || lastLocationSearchTerm || '';
+  }
+}
+
+/* ── Custom categories ── */
+function showAddCategoryInput(){
+  document.getElementById('addCatNewWrap').style.display='flex';
+  document.getElementById('addCatNewInput').focus();
+}
+
+function confirmNewCategory(){
+  const input=document.getElementById('addCatNewInput');
+  const name=input.value.trim();
+  if(!name){ showAddToast('Enter a category name'); return; }
+
+  // avoid duplicate buttons (case-insensitive)
+  const existing = Array.from(document.querySelectorAll('.add-cat-btn')).find(
+    b => b.dataset.cat && b.dataset.cat.toLowerCase() === name.toLowerCase()
+  );
+  if(existing){
+    setAddCategory(existing, existing.dataset.cat);
+  } else {
+    const btn=document.createElement('button');
+    btn.className='add-cat-btn custom';
+    btn.dataset.cat=name;
+    btn.textContent=name;
+    btn.onclick=()=>setAddCategory(btn,name);
+    const newCatBtn=document.getElementById('addCatNewBtn');
+    newCatBtn.parentNode.insertBefore(btn, newCatBtn);
+    setAddCategory(btn, name);
+  }
+
+  input.value='';
+  document.getElementById('addCatNewWrap').style.display='none';
+}
+
+
+async function submitInstallation(){
   const title=document.getElementById('addTitle').value.trim();
   const artist=document.getElementById('addArtist').value.trim();
   const desc=document.getElementById('addDesc').value.trim();
   const location=document.getElementById('addLocation').value.trim();
-  const latInput = document.getElementById('addLat').value;
-  const lngInput = document.getElementById('addLng').value;
-  
+  const lat = selectedLocationLat;
+  const lng = selectedLocationLng;
+  const correctionCheckbox=document.getElementById('saveAsCorrectionCheckbox');
+  const correctionNameInput=document.getElementById('correctionNameInput');
+  const shouldSaveCorrection = correctionCheckbox && correctionCheckbox.checked;
+  const correctionName = correctionNameInput ? correctionNameInput.value.trim() : '';
+
   if(!title){showAddToast('Please enter a title');return;}
   if(!artist){showAddToast('Please enter an artist');return;}
   if(!location){showAddToast('Please enter a location');return;}
-  if(!latInput || !lngInput){showAddToast('Please enter latitude and longitude');return;}
+  if(lat===null || lng===null){showAddToast('Please search and select a location from the list');return;}
+  if(!authToken){showAddToast('Please log in to add an artwork');return;}
+  if(shouldSaveCorrection && !correctionName){showAddToast('Please enter a name for the saved location');return;}
 
-  const lat = parseFloat(latInput);
-  const lng = parseFloat(lngInput);
+  if(shouldSaveCorrection){
+    await maybeSaveLocationCorrection(correctionName, location, lat, lng);
+    await new Promise(r=>setTimeout(r, 1100));
+  }
 
-  const newArtwork={
-    title, sub:`${artist} · ${location}`, dist:'Nearby',
+  if(editingArtworkId !== null){
+    await saveEditedInstallation(editingArtworkId, { title, artist, desc, location, lat, lng });
+    return;
+  }
+
+  const newArtworkPayload={
+    title, sub:`${artist} · ${location}`,
     location, artist, year:new Date().getFullYear().toString(),
     type:addCategory, avatarInitial:artist[0].toUpperCase(),
     desc:desc||'A newly added artwork — be the first to log a feeling!',
-    visitors:0, saved:0, inspired:'0%',
     tags:[addCategory,'New','User Added'],
     browseCategory:addCategory, browseLocation:location,
     color1:'#2a7a7a', color2:'#0d4040',
     userPhoto:addPhotos.length>0?addPhotos[0]:null,
-    feelings:[], userAdded:true,
     lat, lng,
   };
 
-  artworks.push(newArtwork);
-  activeIdx=artworks.length-1;
-  document.getElementById('cardTitle').textContent=newArtwork.title;
-  document.getElementById('cardSub').textContent=newArtwork.sub;
-  document.getElementById('cardDist').textContent=newArtwork.dist;
-  updateBottomThumb(newArtwork);
+  showAddToast('Pinning installation…');
+  try {
+    const created = await api.post('/api/artworks', newArtworkPayload);
+    const newArtwork = {
+      ...newArtworkPayload,
+      id: created.id,
+      dist:'Nearby', visitors:0, saved:0, inspired:'0%',
+      feelings:[], userAdded:true,
+      created_by: profileUser ? Number(profileUser.id) : null,
+    };
 
-  showAddToast('📍 Installation pinned!');
-  setTimeout(()=>{
-    resetAddForm(); buildPins();
-    switchTab('map',null);
-    // Center map on new pin
-    map.setView([lat, lng], map.getZoom());
-    setTimeout(()=>showToast('New artwork visible across the app ✓'),400);
-  },1000);
+    artworks.push(newArtwork);
+    activeIdx=artworks.length-1;
+    rebuildCategoryFilterBars();
+    rebuildCityRecenterButtons();
+    buildLocationSuggestionsFromArtworks();
+    document.getElementById('cardTitle').textContent=newArtwork.title;
+    document.getElementById('cardSub').textContent=newArtwork.sub;
+    document.getElementById('cardDist').textContent=newArtwork.dist;
+    updateBottomThumb(newArtwork);
+
+    showAddToast('📍 Installation pinned!');
+    setTimeout(()=>{
+      resetAddForm(); buildPins();
+      switchTab('map',null);
+      // Center map on new pin
+      map.setView([lat, lng], map.getZoom());
+      setTimeout(()=>showToast('New artwork visible across the app ✓'),400);
+    },1000);
+  } catch (err) {
+    console.error('Failed to save artwork:', err);
+    if(String(err.message).includes('413')){
+      showAddToast('Photo is too large — try a different photo');
+    } else {
+      showAddToast('Failed to save — please try again');
+    }
+  }
+}
+
+/* ── Editing an existing user-added installation ── */
+function openEditInstallation(idx){
+  const a = artworks[idx];
+  if(!a || !a.userAdded) return;
+  if(!profileUser || Number(a.created_by) !== Number(profileUser.id)){
+    showToast("You can only edit installations you've added");
+    return;
+  }
+
+  switchTab('add', null);
+  editingArtworkId = a.id;
+
+  // hide the "search existing artworks" step — irrelevant when editing
+  const searchWrap=document.getElementById('addSearchWrap');
+  if(searchWrap) searchWrap.style.display='none';
+  document.getElementById('addFormSection').style.display='block';
+
+  // relabel the screen for edit mode
+  document.getElementById('addScreenTitle').textContent='Edit Installation';
+  document.getElementById('addSectionDividerText').textContent='Edit Artwork Details';
+  document.getElementById('addPinBtn').textContent='Save Changes';
+  const deleteBtn=document.getElementById('addDeleteBtn'); if(deleteBtn) deleteBtn.style.display='block';
+
+  // pre-fill fields with the existing artwork's data
+  document.getElementById('addTitle').value = a.title || '';
+  document.getElementById('addArtist').value = a.artist || '';
+  document.getElementById('addDesc').value = a.desc || '';
+  document.getElementById('addLocation').value = a.location || '';
+  selectedLocationLat = a.lat;
+  selectedLocationLng = a.lng;
+  document.getElementById('addLat').value = a.lat;
+  document.getElementById('addLng').value = a.lng;
+
+  const confirmedBox=document.getElementById('addLocationConfirmed');
+  const confirmedText=document.getElementById('addLocationConfirmedText');
+  if(confirmedBox && confirmedText){
+    confirmedText.textContent = `Current pin: ${Number(a.lat).toFixed(5)}, ${Number(a.lng).toFixed(5)} — search above to change it`;
+    confirmedBox.style.display='block';
+  }
+  const correctionCheckboxEl=document.getElementById('saveAsCorrectionCheckbox');
+  if(correctionCheckboxEl){
+    correctionCheckboxEl.checked=false;
+    correctionCheckboxEl.parentElement.style.display='none';
+  }
+  const correctionNameWrapEl=document.getElementById('correctionNameFieldWrap');
+  if(correctionNameWrapEl) correctionNameWrapEl.style.display='none';
+  lastLocationSearchTerm='';
+
+  // category: select existing if it matches a known button, otherwise add it as a custom pill
+  const existingCatBtn = Array.from(document.querySelectorAll('.add-cat-btn')).find(
+    b => b.dataset.cat && b.dataset.cat.toLowerCase() === (a.browseCategory||'').toLowerCase()
+  );
+  if(existingCatBtn){
+    setAddCategory(existingCatBtn, existingCatBtn.dataset.cat);
+  } else if(a.browseCategory){
+    const btn=document.createElement('button');
+    btn.className='add-cat-btn custom';
+    btn.dataset.cat=a.browseCategory;
+    btn.textContent=a.browseCategory;
+    btn.onclick=()=>setAddCategory(btn,a.browseCategory);
+    const newCatBtn=document.getElementById('addCatNewBtn');
+    newCatBtn.parentNode.insertBefore(btn, newCatBtn);
+    setAddCategory(btn, a.browseCategory);
+  }
+}
+
+async function saveEditedInstallation(artworkId, fields){
+  showAddToast('Saving changes…');
+  try {
+    const updated = await api.patch(`/api/artworks/${artworkId}`, {
+      title: fields.title,
+      artist: fields.artist,
+      desc: fields.desc,
+      location: fields.location,
+      browseLocation: fields.location,
+      lat: fields.lat,
+      lng: fields.lng,
+      type: addCategory,
+      browseCategory: addCategory,
+    });
+
+    // reflect changes in local state
+    const idx = artworks.findIndex(art => art.id === artworkId);
+    if(idx !== -1){
+      artworks[idx] = { ...artworks[idx], ...updated, tags: updated.tags || artworks[idx].tags };
+    }
+    rebuildCategoryFilterBars();
+    rebuildCityRecenterButtons();
+    buildLocationSuggestionsFromArtworks();
+
+    showAddToast('✓ Changes saved');
+    setTimeout(()=>{
+      resetAddForm(); buildPins();
+      switchTab('profile', null);
+      setTimeout(()=>showToast('Installation updated'),400);
+    },800);
+  } catch (err) {
+    console.error('Failed to save changes:', err);
+    showAddToast('Failed to save — please try again');
+  }
+}
+
+async function maybeSaveLocationCorrection(searchTerm, displayName, lat, lng){
+  const term = (searchTerm || '').trim();
+  if(!term) return;
+  try {
+    await api.post('/api/location-corrections', {
+      search_term: term,
+      display_name: displayName,
+      lat, lng,
+    });
+    showAddToast('✓ Saved as the correct location for "'+term+'"');
+    loadSavedLocationCorrections(); // refresh dropdown cache
+  } catch (err) {
+    console.error('Failed to save location correction:', err);
+    showAddToast('Could not save the location correction — please try again');
+  }
+}
+
+function exitAddOrEditScreen(){
+  const wasEditing = editingArtworkId !== null;
+  resetAddForm();
+  switchTab(wasEditing ? 'profile' : 'map', null);
 }
 
 function showAddToast(msg){
@@ -3555,15 +4197,38 @@ function showAddToast(msg){
 }
 
 /* DELETE */
+let pendingDeleteContext = null; // 'detail' or 'edit'
+
 function openDeleteConfirm(){
+  pendingDeleteContext = 'detail';
   document.getElementById('deleteDialogTitle').textContent = artworks[activeIdx].title;
+  document.getElementById('deleteOverlay').classList.add('open');
+}
+function openDeleteConfirmFromEdit(){
+  if(editingArtworkId === null) return;
+  pendingDeleteContext = 'edit';
+  const a = artworks.find(art => art.id === editingArtworkId);
+  document.getElementById('deleteDialogTitle').textContent = a ? a.title : '';
   document.getElementById('deleteOverlay').classList.add('open');
 }
 function closeDeleteConfirm(){
   document.getElementById('deleteOverlay').classList.remove('open');
 }
-function confirmDelete(){
-  const title = artworks[activeIdx].title;
+async function confirmDelete(){
+  if(pendingDeleteContext === 'edit'){
+    await confirmDeleteFromEdit();
+    return;
+  }
+  const artwork = artworks[activeIdx];
+  const title = artwork.title;
+  try {
+    await api.delete(`/api/artworks/${artwork.id}`);
+  } catch (err) {
+    console.error('Failed to delete artwork:', err);
+    showToast('Failed to delete — please try again');
+    closeDeleteConfirm();
+    return;
+  }
   artworks.splice(activeIdx, 1);
   // reset active index safely
   activeIdx = Math.max(0, Math.min(activeIdx, artworks.length - 1));
@@ -3578,7 +4243,33 @@ function confirmDelete(){
   closeDeleteConfirm();
   closeDetail();
   buildPins();
+  rebuildCategoryFilterBars();
+  rebuildCityRecenterButtons();
+  buildLocationSuggestionsFromArtworks();
   if(detailFromBrowse) renderBrowseGrid(getFilteredArtworks());
+  showToast('"' + title + '" removed');
+}
+
+async function confirmDeleteFromEdit(){
+  const artworkId = editingArtworkId;
+  const idx = artworks.findIndex(art => art.id === artworkId);
+  const title = idx !== -1 ? artworks[idx].title : 'Installation';
+  try {
+    await api.delete(`/api/artworks/${artworkId}`);
+  } catch (err) {
+    console.error('Failed to delete artwork:', err);
+    showToast('Failed to delete — please try again');
+    closeDeleteConfirm();
+    return;
+  }
+  if(idx !== -1) artworks.splice(idx, 1);
+  closeDeleteConfirm();
+  resetAddForm();
+  buildPins();
+  rebuildCategoryFilterBars();
+  rebuildCityRecenterButtons();
+  buildLocationSuggestionsFromArtworks();
+  switchTab('profile', null);
   showToast('"' + title + '" removed');
 }
 
@@ -3669,13 +4360,13 @@ function tapBookmark(){
   }
 }
 
-function saveCurrentArtwork(){
+async function saveCurrentArtwork(){
   const a=artworks[activeIdx];
   if(!a) return;
   if(savedArtworkIds.has(a.id)){
-    unsaveArtwork(a.id);
+    await unsaveArtwork(a.id);
   } else {
-    saveArtwork(a.id);
+    await saveArtwork(a.id);
   }
   const icon=document.getElementById('detailSaveIcon');
   if(icon){
@@ -3790,7 +4481,7 @@ async function renderProfileLoggedIn(){
 
   // Get saved artworks
   const saved = artworks.filter(a => savedArtworkIds.has(a.id));
-  const myAdded = artworks.filter(a => a.user_added);
+  const myAdded = artworks.filter(a => a.userAdded && profileUser && Number(a.created_by) === Number(profileUser.id));
   const visited = []; // TODO: track visited
 
   document.getElementById('profileStatVisited').textContent  = visited.length;
@@ -3869,7 +4560,7 @@ async function renderProfileLoggedIn(){
     myArtSection.style.display='block';
     myArtList.innerHTML=myAdded.map(a=>{
       const idx=artworks.indexOf(a);
-      return `<div class="profile-row" onclick="openDetail(${idx},false);switchTab('map',null)">
+      return `<div class="profile-row" onclick="openEditInstallation(${idx})">
         <div class="profile-row-icon" style="background:#e8f5f5;">
           <svg viewBox="0 0 24 24" fill="none" stroke="#1a6060" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
         </div>
@@ -3902,7 +4593,7 @@ function tapSaved(btn){
 }
 
 function renderSavedScreen(){
-  const saved = artworks.filter(a=>a.savedByUser);
+  const saved = artworks.filter(a=>savedArtworkIds.has(a.id));
   const count = document.getElementById('savedHeaderCount');
   const content = document.getElementById('savedContent');
   count.textContent = saved.length + (saved.length===1?' artwork':' artworks');
@@ -3934,7 +4625,7 @@ function renderSavedScreen(){
     return `<div class="saved-card" style="position:relative;">
       ${bg}
       <div class="saved-card-gradient"></div>
-      <button class="saved-card-remove" onclick="event.stopPropagation();unsaveArtwork(${idx})" aria-label="Remove">
+      <button class="saved-card-remove" onclick="event.stopPropagation();unsaveArtwork(${a.id}).then(renderSavedScreen)" aria-label="Remove">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
       <div class="saved-card-info" onclick="openDetail(${idx},false);currentScreen='saved';">
@@ -3943,15 +4634,6 @@ function renderSavedScreen(){
       </div>
     </div>`;
   }).join('')}</div>`;
-}
-
-function unsaveArtwork(idx){
-  artworks[idx].savedByUser=false;
-  artworks[idx].saved=Math.max(0,(artworks[idx].saved||1)-1);
-  // sync map bookmark if this is the active artwork
-  if(idx===activeIdx) syncBookmarkBtn(artworks[idx]);
-  renderSavedScreen();
-  showToast('Removed from saved');
 }
 
 /* ════════════════════════════
@@ -4242,12 +4924,95 @@ if(savedUser) {
   }
 }
 
+// Default map view — central Hong Kong, covering the Tsim Sha Tsui /
+// Central / Admiralty spread of seeded artworks. Used both for initial
+// load and the "Hong Kong" recenter button.
+const MAP_CENTER_LAT = 22.2911;
+const MAP_CENTER_LNG = 114.1673;
+const MAP_ZOOM = 13;
+
+function recenterMapOnHongKong(){
+  if(!map) return;
+  map.setView([MAP_CENTER_LAT, MAP_CENTER_LNG], MAP_ZOOM);
+}
+
+// ── Dynamic city recenter buttons ──
+// Called after artworks load (and whenever artworks change) to add
+// recenter buttons for user-added artworks that are geographically
+// outside Hong Kong (>0.8° away from HK centre, ~90km).
+// Cache of centroid key → resolved city name, so we don't re-fetch on every rebuild
+const _cityLabelCache = {};
+
+async function rebuildCityRecenterButtons(){
+  // Remove any previously-added dynamic city buttons
+  const group=document.getElementById('mapRecenterGroup');
+  if(!group) return;
+  group.querySelectorAll('.map-recenter-btn.dynamic-city').forEach(b=>b.remove());
+
+  // Collect user-added artworks with valid coordinates far from HK
+  const DIST_THRESHOLD = 0.8; // degrees (~90 km), beyond which we consider it a new city
+  const CLUSTER_RADIUS  = 0.4; // degrees (~45 km), within which pins are the same city
+  const farArtworks = (artworks||[]).filter(a=>{
+    // Include any artwork that was user-added (userAdded flag OR non-null created_by)
+    const isUserAdded = a.userAdded || (a.created_by != null && a.created_by !== '');
+    if(!isUserAdded || a.lat==null || a.lng==null) return false;
+    const dlat=a.lat-MAP_CENTER_LAT, dlng=a.lng-MAP_CENTER_LNG;
+    return Math.sqrt(dlat*dlat+dlng*dlng) > DIST_THRESHOLD;
+  });
+
+  if(farArtworks.length===0) return;
+
+  // Simple greedy clustering by proximity
+  const clusters=[];
+  farArtworks.forEach(a=>{
+    let assigned=false;
+    for(const c of clusters){
+      const dlat=a.lat-c.lat, dlng=a.lng-c.lng;
+      if(Math.sqrt(dlat*dlat+dlng*dlng)<=CLUSTER_RADIUS){
+        c.artworks.push(a);
+        c.lat = c.artworks.reduce((s,x)=>s+x.lat,0)/c.artworks.length;
+        c.lng = c.artworks.reduce((s,x)=>s+x.lng,0)/c.artworks.length;
+        assigned=true; break;
+      }
+    }
+    if(!assigned) clusters.push({ lat:a.lat, lng:a.lng, artworks:[a] });
+  });
+
+  // For each cluster, add a placeholder button immediately, then resolve the
+  // city name via reverse geocode (cached so subsequent rebuilds are instant).
+  for(const c of clusters){
+    const clat=parseFloat(c.lat.toFixed(4));
+    const clng=parseFloat(c.lng.toFixed(4));
+    const cacheKey=`${clat},${clng}`;
+
+    const btn=document.createElement('button');
+    btn.className='map-recenter-btn dynamic-city';
+    const svgIcon=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>`;
+    btn.innerHTML=`${svgIcon}<span>…</span>`;
+    btn.onclick=()=>{ if(map) map.setView([clat,clng],13); };
+    group.appendChild(btn);
+
+    // Resolve label (use cache if available)
+    if(_cityLabelCache[cacheKey]){
+      btn.querySelector('span').textContent = _cityLabelCache[cacheKey];
+      btn.setAttribute('aria-label',`Recenter on ${_cityLabelCache[cacheKey]}`);
+    } else {
+      // Reverse geocode the cluster centroid to get a real city name
+      try {
+        const data = await api.get(`/api/reverse-geocode?lat=${clat}&lng=${clng}`);
+        const city = data.city || '—';
+        _cityLabelCache[cacheKey] = city;
+        btn.querySelector('span').textContent = city;
+        btn.setAttribute('aria-label',`Recenter on ${city}`);
+      } catch(e){
+        btn.querySelector('span').textContent = 'Nearby';
+      }
+    }
+  }
+}
+
 // Initialize Leaflet map
 document.addEventListener('DOMContentLoaded', async function() {
-  const MAP_CENTER_LAT = 22.292;
-  const MAP_CENTER_LNG = 114.162;
-  const MAP_ZOOM = 14;
-  
   map = L.map('map').setView([MAP_CENTER_LAT, MAP_CENTER_LNG], MAP_ZOOM);
   
   // Add OpenStreetMap tiles
@@ -4257,6 +5022,7 @@ document.addEventListener('DOMContentLoaded', async function() {
   
   // Load initial data
   await loadArtworks();
+  loadSavedLocationCorrections(); // fire-and-forget, needed for location dropdown
   if (authToken) {
     try {
       // Validate token by getting user info
