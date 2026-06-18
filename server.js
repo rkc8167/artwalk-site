@@ -425,6 +425,12 @@ app.delete('/api/artworks/:id', authenticateToken, (req, res) => {
     const row = db.prepare('SELECT created_by FROM artworks WHERE id = ?').get(req.params.id);
     if (!row) return res.sendStatus(404);
     if (Number(row.created_by) !== Number(req.user.id)) return res.sendStatus(403);
+    
+    // Delete dependent rows first to prevent foreign key constraint failures
+    db.prepare('DELETE FROM saved_artworks WHERE artwork_id = ?').run(req.params.id);
+    db.prepare('DELETE FROM feelings WHERE artwork_id = ?').run(req.params.id);
+    db.prepare('DELETE FROM walk_stops WHERE artwork_id = ?').run(req.params.id);
+    
     db.prepare('DELETE FROM artworks WHERE id = ?').run(req.params.id);
     res.json({ message: 'Artwork deleted' });
   } catch (err) { res.status(500).json({ error: err.message }); }
